@@ -15,7 +15,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import frc.robot.subsystems.drive.DriveConstants.SwerveModuleConfig;
 import frc.robot.util.PhoenixUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -27,14 +27,13 @@ import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 public class ModuleIOTalonFXSim extends ModuleIOTalonFX {
     private final SwerveModuleSimulation simulation;
 
-    public ModuleIOTalonFXSim(SwerveModuleConstants constants, SwerveModuleSimulation simulation) {
-        super(PhoenixUtil.regulateModuleConstantForSimulation(constants));
+    @SuppressWarnings("unchecked")
+    public ModuleIOTalonFXSim(SwerveModuleConfig config, SwerveModuleSimulation simulation) {
+        super(PhoenixUtil.regulateModuleConstantForSimulation(config.constants()));
 
         this.simulation = simulation;
         simulation.useDriveMotorController(new PhoenixUtil.TalonFXMotorControllerSim(driveTalon));
-
-        simulation.useSteerMotorController(
-                new PhoenixUtil.TalonFXMotorControllerWithRemoteCancoderSim(turnTalon, cancoder));
+        simulation.useSteerMotorController(new PhoenixUtil.TalonFXMotorControllerWithRemoteCancoderSim(turnTalon, cancoder));
     }
 
     @Override
@@ -45,8 +44,7 @@ public class ModuleIOTalonFXSim extends ModuleIOTalonFX {
         inputs.odometryTimestamps = PhoenixUtil.getSimulationOdometryTimeStamps();
 
         inputs.odometryDrivePositionsRad = Arrays.stream(simulation.getCachedDriveWheelFinalPositions())
-                .mapToDouble(angle -> angle.in(Radians))
-                .toArray();
+            .mapToDouble(angle -> angle.in(Radians)).toArray();
 
         inputs.odometryTurnPositions = simulation.getCachedSteerAbsolutePositions();
     }

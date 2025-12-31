@@ -19,7 +19,7 @@ import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.generated.TunerConstants;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -43,11 +43,11 @@ public class PhoenixOdometryThread extends Thread {
     private final List<Queue<Double>> genericQueues = new ArrayList<>();
     private final List<Queue<Double>> timestampQueues = new ArrayList<>();
 
-    private static boolean isCANFD = new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD();
+    private static boolean isCANFD = new CANBus(DriveConstants.drivetrainConstants.CANBusName).isNetworkFD();
     private static PhoenixOdometryThread instance = null;
 
     public static PhoenixOdometryThread getInstance() {
-        if (instance == null) {
+        if(instance == null) {
             instance = new PhoenixOdometryThread();
         }
         return instance;
@@ -60,7 +60,7 @@ public class PhoenixOdometryThread extends Thread {
 
     @Override
     public void start() {
-        if (!timestampQueues.isEmpty() && RobotBase.isReal()) {
+        if(!timestampQueues.isEmpty() && RobotBase.isReal()) {
             super.start();
         }
     }
@@ -139,21 +139,21 @@ public class PhoenixOdometryThread extends Thread {
                 //     FPGA timestamps, this solution is imperfect but close
                 double timestamp = RobotController.getFPGATime() / 1e6;
                 double totalLatency = 0.0;
-                for (BaseStatusSignal signal : phoenixSignals) {
+                for(BaseStatusSignal signal : phoenixSignals) {
                     totalLatency += signal.getTimestamp().getLatency();
                 }
-                if (phoenixSignals.length > 0) {
+                if(phoenixSignals.length > 0) {
                     timestamp -= totalLatency / phoenixSignals.length;
                 }
 
                 // Add new samples to queues
-                for (int i = 0; i < phoenixSignals.length; i++) {
+                for(int i = 0; i < phoenixSignals.length; i++) {
                     phoenixQueues.get(i).offer(phoenixSignals[i].getValueAsDouble());
                 }
-                for (int i = 0; i < genericSignals.size(); i++) {
+                for(int i = 0; i < genericSignals.size(); i++) {
                     genericQueues.get(i).offer(genericSignals.get(i).getAsDouble());
                 }
-                for (int i = 0; i < timestampQueues.size(); i++) {
+                for(int i = 0; i < timestampQueues.size(); i++) {
                     timestampQueues.get(i).offer(timestamp);
                 }
             } finally {

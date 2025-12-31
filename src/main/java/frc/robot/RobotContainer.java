@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
@@ -58,15 +57,15 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        switch (Constants.currentMode) {
+        switch(Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
                 drive = new Drive(
                         new GyroIOPigeon2(),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.FrontRight),
-                        new ModuleIOTalonFXReal(TunerConstants.BackLeft),
-                        new ModuleIOTalonFXReal(TunerConstants.BackRight),
+                        new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
+                        new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
+                        new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
+                        new ModuleIOTalonFXReal(DriveConstants.backRightConfig),
                         (pose) -> {});
                 this.vision = new Vision(
                         drive,
@@ -75,28 +74,20 @@ public class RobotContainer {
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
-
                 driveSimulation = new SwerveDriveSimulation(Drive.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
                 SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
                 drive = new Drive(
                         new GyroIOSim(driveSimulation.getGyroSimulation()),
-                        new ModuleIOTalonFXSim(
-                                TunerConstants.FrontLeft, driveSimulation.getModules()[0]),
-                        new ModuleIOTalonFXSim(
-                                TunerConstants.FrontRight, driveSimulation.getModules()[1]),
-                        new ModuleIOTalonFXSim(
-                                TunerConstants.BackLeft, driveSimulation.getModules()[2]),
-                        new ModuleIOTalonFXSim(
-                                TunerConstants.BackRight, driveSimulation.getModules()[3]),
+                        new ModuleIOTalonFXSim(DriveConstants.frontLeftConfig, driveSimulation.getModules()[0]),
+                        new ModuleIOTalonFXSim(DriveConstants.frontRightConfig, driveSimulation.getModules()[1]),
+                        new ModuleIOTalonFXSim(DriveConstants.backLeftConfig, driveSimulation.getModules()[2]),
+                        new ModuleIOTalonFXSim(DriveConstants.backRightConfig, driveSimulation.getModules()[3]),
                         driveSimulation::setSimulationWorldPose);
                 vision = new Vision(
                         drive,
-                        new VisionIOPhotonVisionSim(
-                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-                        new VisionIOPhotonVisionSim(
-                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                        new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                        new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 break;
-
             default:
                 // Replayed robot, disable IO implementations
                 drive = new Drive(
@@ -107,7 +98,6 @@ public class RobotContainer {
                         new ModuleIO() {},
                         (pose) -> {});
                 vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
-
                 break;
         }
 

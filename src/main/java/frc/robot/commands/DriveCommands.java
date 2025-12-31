@@ -27,8 +27,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
+
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -72,9 +73,9 @@ public class DriveCommands {
 
                     // Convert to field relative speeds & send command
                     ChassisSpeeds speeds = new ChassisSpeeds(
-                            linearVelocity.getX() * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-                            linearVelocity.getY() * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-                            omega * TunerConstants.maxAngularSpeedRadPerSec);
+                            linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
+                            linearVelocity.getY() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
+                            omega * DriveConstants.maxAngularSpeedRadPerSec);
                     boolean isFlipped = DriverStation.getAlliance().isPresent()
                             && DriverStation.getAlliance().get() == Alliance.Red;
                     // drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
@@ -111,8 +112,8 @@ public class DriveCommands {
 
                             // Convert to field relative speeds & send command
                             ChassisSpeeds speeds = new ChassisSpeeds(
-                                    linearVelocity.getX() * TunerConstants.maxSpeedMetersPerSec,
-                                    linearVelocity.getY() * TunerConstants.maxSpeedMetersPerSec,
+                                    linearVelocity.getX() * DriveConstants.maxSpeedMetersPerSec,
+                                    linearVelocity.getY() * DriveConstants.maxSpeedMetersPerSec,
                                     omega);
                             boolean isFlipped = DriverStation.getAlliance().isPresent()
                                     && DriverStation.getAlliance().get() == Alliance.Red;

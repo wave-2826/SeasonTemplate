@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Kilogram;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.io.FileReader;
@@ -20,6 +22,7 @@ import com.google.gson.JsonSyntaxException;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
@@ -27,8 +30,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.Container;
 
 /**
@@ -241,7 +244,7 @@ public class DriveTuningCommands {
                         double[] positions = drive.getWheelRadiusCharacterizationPositions();
                         double wheelDelta = 0.0;
                         for(int i = 0; i < 4; i++) wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
-                        double wheelRadius = (state.gyroDelta * TunerConstants.driveBaseRadius) / wheelDelta;
+                        double wheelRadius = (state.gyroDelta * DriveConstants.driveBaseRadius) / wheelDelta;
 
                         NumberFormat formatter = new DecimalFormat("#0.000");
                         System.out.println("********** Wheel Radius Characterization Results **********");
@@ -273,11 +276,11 @@ public class DriveTuningCommands {
         Command command = Commands.sequence( //
             Commands.runOnce(() -> {
                 throw new UnsupportedOperationException("you didn't implement this, silly");
-                // // Temporarily increase the drive current limit
-                // drive.setSlipMeasurementCurrentLimit(currentLimitForSlipMeasurement);
-                // for(int i = 0; i < 4; i++) {
-                //     moduleResults[i] = new SlipCurrentModuleResult();
-                // }
+                // Temporarily increase the drive current limit
+                drive.setSlipMeasurementCurrentLimit(currentLimitForSlipMeasurement);
+                for(int i = 0; i < 4; i++) {
+                    moduleResults[i] = new SlipCurrentModuleResult();
+                }
             }),
 
             // Allow modules to orient
@@ -295,48 +298,48 @@ public class DriveTuningCommands {
 
             // Restore the current limit and print results
             Commands.runOnce(() -> {
-                // drive.setSlipMeasurementCurrentLimit(DriveConstants.driveMotorCurrentLimit);
+                drive.setSlipMeasurementCurrentLimit(DriveConstants.slipCurrent);
 
-                // double averageSlipCurrent = 0.0;
-                // double averageSlipVoltage = 0.0;
-                // for(int i = 0; i < 4; i++) {
-                //     averageSlipCurrent += moduleResults[i].slipCurrent / 4.;
-                //     averageSlipVoltage += moduleResults[i].slipVoltage / 4.;
-                // }
+                double averageSlipCurrent = 0.0;
+                double averageSlipVoltage = 0.0;
+                for(int i = 0; i < 4; i++) {
+                    averageSlipCurrent += moduleResults[i].slipCurrent / 4.;
+                    averageSlipVoltage += moduleResults[i].slipVoltage / 4.;
+                }
 
-                // NumberFormat formatter = new DecimalFormat("#0.000");
+                NumberFormat formatter = new DecimalFormat("#0.000");
 
-                // System.out.println("********** Drive Slip Current Measurement Results **********");
-                // System.out.println("\tAverage slip Current: " + formatter.format(averageSlipCurrent) + " amps");
-                // System.out.println("\tAverage slip \"Voltage\": " + formatter.format(averageSlipVoltage) + " volts");
-                // String[] moduleNames = new String[] {
-                //     "Front left", "Front right", "Back left", "Back right"
-                // };
+                System.out.println("********** Drive Slip Current Measurement Results **********");
+                System.out.println("\tAverage slip Current: " + formatter.format(averageSlipCurrent) + " amps");
+                System.out.println("\tAverage slip \"Voltage\": " + formatter.format(averageSlipVoltage) + " volts");
+                String[] moduleNames = new String[] {
+                    "Front left", "Front right", "Back left", "Back right"
+                };
 
-                // System.out.println("\tIndividual module slip currents:");
-                // for(int i = 0; i < 4; i++) {
-                //     System.out.println(
-                //         "\t \t" + moduleNames[i] + ": " + formatter.format(moduleResults[i].slipCurrent) + " amps");
-                // }
+                System.out.println("\tIndividual module slip currents:");
+                for(int i = 0; i < 4; i++) {
+                    System.out.println(
+                        "\t \t" + moduleNames[i] + ": " + formatter.format(moduleResults[i].slipCurrent) + " amps");
+                }
 
-                // // Estimate the wheel's coefficient of friction
-                // double motorTorque = averageSlipCurrent * DriveConstants.driveSimMotor.KtNMPerAmp;
-                // double totalTorqueNm = 4 * DriveConstants.driveMotorReduction * motorTorque;
-                // double robotMassN = DriveConstants.robotMassKg * 9.81;
-                // double wheelCOF = totalTorqueNm / (robotMassN * DriveConstants.wheelRadiusMeters);
-                // NumberFormat cofFormatter = new DecimalFormat("#0.0000");
-                // System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
+                // Estimate the wheel's coefficient of friction
+                double motorTorque = averageSlipCurrent * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+                double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
+                double robotMassN = DriveConstants.robotMass.in(Kilogram) * 9.81;
+                double wheelCOF = totalTorqueNm / (robotMassN * DriveConstants.wheelRadius.in(Meters));
+                NumberFormat cofFormatter = new DecimalFormat("#0.0000");
+                System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
 
-                // // Save results
-                // tuningResults.slipCurrentAmps = averageSlipCurrent;
-                // tuningResults.slipVoltageVolts = averageSlipVoltage;
-                // tuningResults.wheelCOF = wheelCOF;
-                // for(int i = 0; i < 4; i++) {
-                //     tuningResults.moduleSlipCurrentsAmps[i] = moduleResults[i].slipCurrent;
-                //     tuningResults.moduleSlipVoltagesVolts[i] = moduleResults[i].slipVoltage;
-                // }
-                // tuningResults.save();
-            }) //
+                // Save results
+                tuningResults.slipCurrentAmps = averageSlipCurrent;
+                tuningResults.slipVoltageVolts = averageSlipVoltage;
+                tuningResults.wheelCOF = wheelCOF;
+                for(int i = 0; i < 4; i++) {
+                    tuningResults.moduleSlipCurrentsAmps[i] = moduleResults[i].slipCurrent;
+                    tuningResults.moduleSlipVoltagesVolts[i] = moduleResults[i].slipVoltage;
+                }
+                tuningResults.save();
+            })
         );
         command.addRequirements(drive);
         return command;
