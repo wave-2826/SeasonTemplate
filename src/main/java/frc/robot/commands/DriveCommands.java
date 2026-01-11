@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 
@@ -59,6 +60,7 @@ public class DriveCommands {
     /** Field relative drive command using two joysticks (controlling linear and angular velocities). */
     public static Command joystickDrive(
             Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
+        RobotState robotState = RobotState.getInstance();
         return Commands.run(
                 () -> {
                     // Get linear velocity
@@ -81,7 +83,7 @@ public class DriveCommands {
                     // drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
                     drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
                             speeds,
-                            isFlipped ? drive.getRotation().plus(new Rotation2d(Math.PI)) : drive.getRotation()));
+                            isFlipped ? robotState.getRotation().plus(new Rotation2d(Math.PI)) : robotState.getRotation()));
                 },
                 drive);
     }
@@ -92,6 +94,7 @@ public class DriveCommands {
      */
     public static Command joystickDriveAtAngle(
             Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, Supplier<Rotation2d> rotationSupplier) {
+        RobotState robotState = RobotState.getInstance();
 
         // Create PID controller
         ProfiledPIDController angleController = new ProfiledPIDController(
@@ -107,7 +110,7 @@ public class DriveCommands {
 
                             // Calculate angular speed
                             double omega = angleController.calculate(
-                                    drive.getRotation().getRadians(),
+                                    robotState.getRotation().getRadians(),
                                     rotationSupplier.get().getRadians());
 
                             // Convert to field relative speeds & send command
@@ -120,12 +123,12 @@ public class DriveCommands {
                             drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
                                     speeds,
                                     isFlipped
-                                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                                            : drive.getRotation()));
+                                            ? robotState.getRotation().plus(new Rotation2d(Math.PI))
+                                            : robotState.getRotation()));
                         },
                         drive)
 
                 // Reset PID controller when command starts
-                .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+                .beforeStarting(() -> angleController.reset(robotState.getRotation().getRadians()));
     }
 }

@@ -5,15 +5,26 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.hardware.*;
 import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 
 /**
@@ -78,6 +89,10 @@ public class DriveConstants {
                 xPosition, yPosition,
                 invertSide, invertMotor, invertEncoder
             );
+        }
+
+        Translation2d getTranslation() {
+            return new Translation2d(xPosition, yPosition);
         }
     }
 
@@ -179,7 +194,39 @@ public class DriveConstants {
         backLeftConfig,
         backRightConfig
     ));
+    public static final Translation2d[] moduleTranslations = moduleConfigs
+        .stream()
+        .map(SwerveModuleConfig::getTranslation)
+        .toArray(Translation2d[]::new);
     
+    
+    public static final RobotConfig pathplannerConfig = new RobotConfig(robotMass, robotMomentOfInertia,
+        new ModuleConfig(wheelRadius, linearFreeSpeed, wheelCOF,
+            DCMotor.getKrakenX60Foc(1).withReduction(driveGearRatio), DriveConstants.slipCurrent, 1),
+        moduleTranslations);
+
+    public static final PPHolonomicDriveController simHolonomicDriveController = new PPHolonomicDriveController(
+        new PIDConstants(13.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0));
+    public static final PPHolonomicDriveController realHolonomicDriveController = new PPHolonomicDriveController(
+        new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
+
+    static final double odometryFrequency = new CANBus(DriveConstants.drivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+
+    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
+        .withRobotMass(DriveConstants.robotMass)
+        .withCustomModuleTranslations(DriveConstants.moduleTranslations)
+        .withGyro(COTS.ofPigeon2())
+        .withSwerveModule(new SwerveModuleSimulationConfig(
+            DCMotor.getKrakenX60(1),
+            DCMotor.getFalcon500(1),
+            DriveConstants.driveGearRatio,
+            DriveConstants.steerGearRatio,
+            DriveConstants.driveFrictionVoltage,
+            DriveConstants.steerFrictionVoltage,
+            DriveConstants.wheelRadius,
+            DriveConstants.steerInertia,
+            DriveConstants.wheelCOF));
+
     /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
     public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
         /**
