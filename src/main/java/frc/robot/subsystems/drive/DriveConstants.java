@@ -44,9 +44,18 @@ public class DriveConstants {
         public final boolean invertMotor;
         public final boolean invertEncoder;
 
+        /**
+         * @param driveId
+         * @param steerId
+         * @param encoderId
+         * @param encoderOffset
+         * @param yPosition The forward-backward coordinate. Positive X is the front of the robot.
+         * @param xPosition The left-right coordinate. Poitive Y is toward the left of the robot.
+         * @param invertSide
+         */
         public SwerveModuleConfig(
             int driveId, int steerId, int encoderId,
-            Angle encoderOffset, Distance xPosition, Distance yPosition,
+            Angle encoderOffset, Distance yPosition, Distance xPosition,
             boolean invertSide) {
             this.steerMotorId = steerId;
             this.driveMotorId = driveId;
@@ -105,12 +114,12 @@ public class DriveConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(100).withKI(0).withKD(0.5).withKS(0.1).withKV(1.59).withKA(0)
+        .withKP(325).withKI(0).withKD(0.8).withKS(0.1).withKV(1.59).withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+        .withKP(3.0).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
     /** The closed-loop output type to use for the steer motors; this affects their PID/FF gains */
     private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;

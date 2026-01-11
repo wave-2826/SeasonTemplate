@@ -1,16 +1,3 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -53,39 +40,37 @@ public class DriveCommands {
 
         // Return new linear velocity
         return new Pose2d(new Translation2d(), linearDirection)
-                .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
-                .getTranslation();
+            .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+            .getTranslation();
     }
 
     /** Field relative drive command using two joysticks (controlling linear and angular velocities). */
     public static Command joystickDrive(
             Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
         RobotState robotState = RobotState.getInstance();
-        return Commands.run(
-                () -> {
-                    // Get linear velocity
-                    Translation2d linearVelocity =
-                            getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+        return Commands.run(() -> {
+            // Get linear velocity
+            Translation2d linearVelocity =
+                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-                    // Apply rotation deadband
-                    double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+            // Apply rotation deadband
+            double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
-                    // Square rotation value for more precise control
-                    omega = Math.copySign(omega * omega, omega);
+            // Square rotation value for more precise control
+            omega = Math.copySign(omega * omega, omega);
 
-                    // Convert to field relative speeds & send command
-                    ChassisSpeeds speeds = new ChassisSpeeds(
-                            linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
-                            linearVelocity.getY() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
-                            omega * DriveConstants.maxAngularSpeedRadPerSec);
-                    boolean isFlipped = DriverStation.getAlliance().isPresent()
-                            && DriverStation.getAlliance().get() == Alliance.Red;
-                    // drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
-                    drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
-                            speeds,
-                            isFlipped ? robotState.getRotation().plus(new Rotation2d(Math.PI)) : robotState.getRotation()));
-                },
-                drive);
+            // Convert to field relative speeds & send command
+            ChassisSpeeds speeds = new ChassisSpeeds(
+                linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
+                linearVelocity.getY() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
+                omega * DriveConstants.maxAngularSpeedRadPerSec);
+            boolean isFlipped = DriverStation.getAlliance().isPresent()
+                && DriverStation.getAlliance().get() == Alliance.Red;
+            // drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds,
+            drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
+                speeds,
+                isFlipped ? robotState.getRotation().plus(new Rotation2d(Math.PI)) : robotState.getRotation()));
+        }, drive);
     }
 
     /**
@@ -98,37 +83,36 @@ public class DriveCommands {
 
         // Create PID controller
         ProfiledPIDController angleController = new ProfiledPIDController(
-                ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+            ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
         angleController.enableContinuousInput(-Math.PI, Math.PI);
 
         // Construct command
         return Commands.run(
-                        () -> {
-                            // Get linear velocity
-                            Translation2d linearVelocity =
-                                    getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+            () -> {
+                // Get linear velocity
+                Translation2d linearVelocity =
+                    getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-                            // Calculate angular speed
-                            double omega = angleController.calculate(
-                                    robotState.getRotation().getRadians(),
-                                    rotationSupplier.get().getRadians());
+                // Calculate angular speed
+                double omega = angleController.calculate(
+                    robotState.getRotation().getRadians(),
+                    rotationSupplier.get().getRadians());
 
-                            // Convert to field relative speeds & send command
-                            ChassisSpeeds speeds = new ChassisSpeeds(
-                                    linearVelocity.getX() * DriveConstants.maxSpeedMetersPerSec,
-                                    linearVelocity.getY() * DriveConstants.maxSpeedMetersPerSec,
-                                    omega);
-                            boolean isFlipped = DriverStation.getAlliance().isPresent()
-                                    && DriverStation.getAlliance().get() == Alliance.Red;
-                            drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    speeds,
-                                    isFlipped
-                                            ? robotState.getRotation().plus(new Rotation2d(Math.PI))
-                                            : robotState.getRotation()));
-                        },
-                        drive)
-
-                // Reset PID controller when command starts
-                .beforeStarting(() -> angleController.reset(robotState.getRotation().getRadians()));
+                // Convert to field relative speeds & send command
+                ChassisSpeeds speeds = new ChassisSpeeds(
+                    linearVelocity.getX() * DriveConstants.maxSpeedMetersPerSec,
+                    linearVelocity.getY() * DriveConstants.maxSpeedMetersPerSec,
+                    omega);
+                boolean isFlipped = DriverStation.getAlliance().isPresent()
+                    && DriverStation.getAlliance().get() == Alliance.Red;
+                drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
+                    speeds,
+                    isFlipped
+                        ? robotState.getRotation().plus(new Rotation2d(Math.PI))
+                        : robotState.getRotation()));
+            },
+            drive)
+            // Reset PID controller when command starts
+            .beforeStarting(() -> angleController.reset(robotState.getRotation().getRadians()));
     }
 }

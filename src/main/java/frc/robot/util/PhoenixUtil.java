@@ -112,27 +112,27 @@ public final class PhoenixUtil {
 
         // Apply simulation-specific adjustments to module constants
         return moduleConstants
-                // Disable encoder offsets
-                .withEncoderOffset(0)
-                // Disable motor inversions for drive and steer motors
-                .withDriveMotorInverted(false)
-                .withSteerMotorInverted(false)
-                // Disable CanCoder inversion
-                .withEncoderInverted(false)
-                // Adjust steer motor PID gains for simulation
-                .withSteerMotorGains(new Slot0Configs()
-                        .withKP(70)
-                        .withKI(0)
-                        .withKD(4.5)
-                        .withKS(0)
-                        .withKV(1.91)
-                        .withKA(0)
-                        .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign))
-                .withSteerMotorGearRatio(16.0)
-                // Adjust friction voltages
-                .withDriveFrictionVoltage(Volts.of(0.1))
-                .withSteerFrictionVoltage(Volts.of(0.05))
-                // Adjust steer inertia
-                .withSteerInertia(KilogramSquareMeters.of(0.05));
+            // Disable encoder offsets
+            .withEncoderOffset(0)
+            // Disable motor inversions for drive and steer motors
+            .withDriveMotorInverted(false)
+            .withSteerMotorInverted(false)
+            // Disable CanCoder inversion
+            .withEncoderInverted(false)
+            // Adjust steer motor PID gains for simulation
+            .withSteerMotorGains(new Slot0Configs()
+                .withKP(70)
+                .withKI(0)
+                .withKD(4.5)
+                .withKS(0)
+                .withKV(1.91)
+                .withKA(0)
+                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign))
+            .withSteerMotorGearRatio(16.0)
+            // Adjust friction voltages
+            .withDriveFrictionVoltage(Volts.of(0.1))
+            .withSteerFrictionVoltage(Volts.of(0.05))
+            // Adjust steer inertia
+            .withSteerInertia(KilogramSquareMeters.of(0.05));
     }
 }

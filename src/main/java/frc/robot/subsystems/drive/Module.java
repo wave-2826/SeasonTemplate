@@ -107,6 +107,7 @@ public class Module {
         state.cosineScale(inputs.turnAbsolutePosition);
 
         // Apply setpoints
+        // TODO: Tuning toggle to disable drive wheels
         io.setDriveVelocity(
             state.speedMetersPerSecond / DriveConstants.wheelRadius.in(Meters),
             accelerationMps2 / DriveConstants.wheelRadius.in(Meters)
